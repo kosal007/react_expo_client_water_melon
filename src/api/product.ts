@@ -1,4 +1,4 @@
-const API_URL = 'http://192.168.10.174:3000/api';
+const API_URL = 'http://192.168.10.85:3000/api';
 
 export interface ProductPayload {
   id?: string;
