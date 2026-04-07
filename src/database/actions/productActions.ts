@@ -1,6 +1,7 @@
 import { Q } from '@nozbe/watermelondb';
 import database from '../index';
 import Product from '../models/Product';
+import { syncProducts as runProductSync } from '../sync';
 
 const productsCollection = database.collections.get<Product>('products');
 
@@ -49,4 +50,8 @@ export const hardDeleteProduct = async (id) => {
 
 export const getAllProducts = async () => {
   return productsCollection.query(Q.where('deleted', false)).fetch();
+};
+
+export const syncProducts = async (): Promise<void> => {
+  await runProductSync();
 };
