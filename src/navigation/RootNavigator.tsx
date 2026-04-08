@@ -1,8 +1,10 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useColorScheme } from 'react-native';
-import { ProductScreen , HomeScreen , SettingsScreen } from '../screens';
+import { ProductScreen , HomeScreen , SettingsScreen, LoginScreen, RoleAScreen } from '../screens';
 
 export type RootStackParamList = {
+  Login: undefined;
+  RoleAHome: undefined;
   Home: undefined;
   Products: undefined;
   Settings: undefined;
@@ -17,12 +19,14 @@ export default function RootNavigator() {
   return (
     <Stack.Navigator
       id="root-stack"
-      initialRouteName="Home"
+      initialRouteName="Login"
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor },
       }}
     >
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="RoleAHome" component={RoleAScreen} />
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Products" component={ProductScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />

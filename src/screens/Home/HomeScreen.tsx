@@ -34,6 +34,13 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={styles.buttonIcon}>📦</Text>
         </Pressable>
       </View>
+      <View style={styles.card}>
+              <Text style={styles.cardText}>{t('role_a_home_message')}</Text>
+      
+              <Pressable style={styles.button} onPress={() => navigation.replace('Login')}>
+                <Text style={styles.buttonText}>{t('logout')}</Text>
+              </Pressable>
+            </View>
     </View>
   );
 }
@@ -102,5 +109,10 @@ const styles = StyleSheet.create({
   },
   buttonIcon: {
     fontSize: 20,
+  },
+   buttonText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });

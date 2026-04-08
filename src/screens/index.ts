@@ -1,3 +1,5 @@
 export { default as ProductScreen } from './product/ProductScreen'
 export { default as HomeScreen } from './Home/HomeScreen'
 export { default as SettingsScreen } from './settings/SettingsScreen'
+export { default as LoginScreen } from './auth/LoginScreen'
+export { default as RoleAScreen } from './RoleTE/RoleAScreen'
