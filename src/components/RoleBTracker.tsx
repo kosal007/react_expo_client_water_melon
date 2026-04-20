@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Platform } from 'react-native';
 import * as Location from 'expo-location';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSocket } from '../hooks/useSocket';
+import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type RoleBTrackerProps = {
   userId: string;
@@ -12,8 +15,11 @@ type TrackerState = 'idle' | 'sending' | 'error';
 
 const LOCATION_EVENT_NAME = 'location:update';
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 export default function RoleBTracker({ userId }: RoleBTrackerProps) {
   const { socket, status } = useSocket();
+  const navigation = useNavigation<NavigationProp>();
   const [permissionState, setPermissionState] = useState<'checking' | 'granted' | 'denied' | 'error'>('checking');
   const [trackerState, setTrackerState] = useState<TrackerState>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -124,6 +130,10 @@ export default function RoleBTracker({ userId }: RoleBTrackerProps) {
 
       {permissionState === 'checking' || trackerState === 'sending' ? <ActivityIndicator size="small" /> : null}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+      <Pressable style={styles.productsButton} onPress={() => navigation.navigate('Products')}>
+        <Text style={styles.productsButtonText}>Go to Products</Text>
+      </Pressable>
     </View>
   );
 }
@@ -156,5 +166,18 @@ const styles = StyleSheet.create({
     color: '#dc2626',
     fontSize: 14,
     fontWeight: '600',
+  },
+  productsButton: {
+    marginTop: 10,
+    alignSelf: 'flex-start',
+    backgroundColor: '#0f172a',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  productsButtonText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
