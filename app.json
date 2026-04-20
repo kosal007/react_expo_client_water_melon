@@ -14,20 +14,47 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.kosalseng.CRM-App3"
+      "bundleIdentifier": "com.kosalseng.CRM-App3",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Allow CRM App to access your location while using the app.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow CRM App to access your location to support ROLE_B tracking.",
+        "UIBackgroundModes": [
+          "location"
+        ]
+      },
+      "appleTeamId": "B4B33DQAAY"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow CRM App to access your location while using the app.",
+          "locationAlwaysAndWhenInUsePermission": "Allow CRM App to access your location to support ROLE_B tracking.",
+          "isIosBackgroundLocationEnabled": true
+        }
+      ],
+      [
+        "react-native-maps",
+        {
+          "iosGoogleMapsApiKey": "AIzaSyD8BUaD-7pBCgEaSw9Zo5YJb3cL2OHJinM",
+          "androidGoogleMapsApiKey": "AIzaSyD8BUaD-7pBCgEaSw9Zo5YJb3cL2OHJinM"
+        }
+      ]
     ]
   }
 }
