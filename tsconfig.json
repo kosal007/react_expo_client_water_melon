@@ -3,5 +3,5 @@
     "experimentalDecorators": true,
     "useDefineForClassFields": false
   },
-  "extends": "expo/tsconfig.base"
+  "extends": "expo/tsconfig.base.json"
 }

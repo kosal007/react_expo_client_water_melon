@@ -3,12 +3,84 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useLanguage } from '../../contexts';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
+import { useMemo } from 'react';
+import { logout } from '../../hooks/useAuth';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
-export default function HomeScreen({ navigation }: Props) {
+export default function HomeScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const user = route.params?.user;
+
+  const handleLogout = async () => {
+    await logout();
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
+  };
+
+  const nativeModuleLoadError = useMemo(() => {
+    if (!user) {
+      return null;
+    }
+
+    if (user.role === 'ROLE_B') {
+      try {
+        require('../../components/RoleBTracker');
+        return null;
+      } catch (error) {
+        return 'Location module is not in the iOS build yet. Rebuild the dev client.';
+      }
+    }
+
+    if (user.role === 'ROLE_A') {
+      try {
+        require('../../components/RoleAViewer');
+        return null;
+      } catch (error) {
+        return 'Map module is not in the iOS build yet. Rebuild the dev client.';
+      }
+    }
+
+    return null;
+  }, [user]);
+
+  if (nativeModuleLoadError) {
+    return (
+      <View style={styles.fallbackContainer}>
+        <Text style={styles.fallbackTitle}>Native module missing</Text>
+        <Text style={styles.fallbackText}>{nativeModuleLoadError}</Text>
+      </View>
+    );
+  }
+
+  if (user?.role === 'ROLE_B') {
+    const RoleBTracker = require('../../components/RoleBTracker').default as (
+      props: { userId: string }
+    ) => React.JSX.Element;
+    return (
+      <View style={styles.roleContainer}>
+        <Pressable style={[styles.logoutButton, { top: insets.top + 10 }]} onPress={() => void handleLogout()}>
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </Pressable>
+        <RoleBTracker userId={user.id} />
+      </View>
+    );
+  }
+
+  if (user?.role === 'ROLE_A') {
+    const RoleAViewer = require('../../components/RoleAViewer').default as () => React.JSX.Element;
+    return (
+      <View style={styles.roleContainer}>
+        <Pressable style={[styles.logoutButton, { top: insets.top + 10 }]} onPress={() => void handleLogout()}>
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </Pressable>
+        <RoleAViewer />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
@@ -102,5 +174,41 @@ const styles = StyleSheet.create({
   },
   buttonIcon: {
     fontSize: 20,
+  },
+  fallbackContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 20,
+  },
+  fallbackTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: 8,
+  },
+  fallbackText: {
+    fontSize: 14,
+    color: '#475569',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  roleContainer: {
+    flex: 1,
+  },
+  logoutButton: {
+    position: 'absolute',
+    right: 14,
+    zIndex: 20,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    backgroundColor: 'rgba(15, 23, 42, 0.88)',
+  },
+  logoutButtonText: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 12,
   },
 });
