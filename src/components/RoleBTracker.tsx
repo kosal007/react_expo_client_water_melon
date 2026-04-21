@@ -2,9 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Platform } from 'react-native';
 import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useAuth } from '../hooks/useAuth';
+import { useExpoPushToken } from '../hooks/useExpoPushToken';
 import { useSocket } from '../hooks/useSocket';
+import { ENDPOINTS } from '../config/network';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type RoleBTrackerProps = {
@@ -14,16 +18,83 @@ type RoleBTrackerProps = {
 type TrackerState = 'idle' | 'sending' | 'error';
 
 const LOCATION_EVENT_NAME = 'location:update';
+const SYNC_EVENT_NAME = 'sync:data';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function RoleBTracker({ userId }: RoleBTrackerProps) {
   const { socket, status } = useSocket();
+  const { token } = useAuth();
+  const { expoPushToken, permissionStatus } = useExpoPushToken();
   const navigation = useNavigation<NavigationProp>();
   const [permissionState, setPermissionState] = useState<'checking' | 'granted' | 'denied' | 'error'>('checking');
   const [trackerState, setTrackerState] = useState<TrackerState>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [lastCoords, setLastCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [pushTokenMessage, setPushTokenMessage] = useState<string | null>(null);
   const isSendingRef = useRef(false);
+
+  useEffect(() => {
+    if (!expoPushToken || !token) {
+      if (permissionStatus === Notifications.PermissionStatus.DENIED) {
+        setPushTokenMessage('Notifications denied. Push alerts are disabled.');
+      }
+      return;
+    }
+
+    let isMounted = true;
+
+    const savePushToken = async () => {
+      try {
+        const response = await fetch(ENDPOINTS.pushToken, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ token: expoPushToken }),
+        });
+
+        if (!response.ok) {
+          const responseText = await response.text();
+
+          if (!isMounted) {
+            return;
+          }
+
+          if (response.status === 401 || response.status === 403) {
+            setPushTokenMessage('Session expired. Please login again.');
+            return;
+          }
+
+          if (response.status === 400 || response.status === 404 || response.status === 422) {
+            setPushTokenMessage('Push token rejected by server.');
+            return;
+          }
+
+          setPushTokenMessage(`Push token save failed (${response.status}).`);
+          console.warn('Push token save failed:', response.status, responseText);
+          return;
+        }
+
+        if (isMounted) {
+          setPushTokenMessage('Push token ready.');
+        }
+      } catch (pushError) {
+        if (isMounted) {
+          setPushTokenMessage('Cannot register push token right now.');
+        }
+      }
+    };
+
+    void savePushToken();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [expoPushToken, permissionStatus, token]);
 
   useEffect(() => {
     const requestPermissions = async () => {
@@ -93,6 +164,8 @@ export default function RoleBTracker({ userId }: RoleBTrackerProps) {
           updatedAt: new Date().toISOString(),
         };
 
+        setLastCoords({ lat: payload.lat, lng: payload.lng });
+
         socket.emit(LOCATION_EVENT_NAME, payload);
         setTrackerState('idle');
       } catch (sendError) {
@@ -110,6 +183,51 @@ export default function RoleBTracker({ userId }: RoleBTrackerProps) {
 
     return () => clearInterval(intervalId);
   }, [permissionState, socket, status, userId]);
+
+  const handleSync = async () => {
+    if (syncState === 'syncing') {
+      return;
+    }
+
+    if (status !== 'connected') {
+      setSyncState('error');
+      setSyncMessage('Socket is disconnected.');
+      return;
+    }
+
+    setSyncState('syncing');
+    setSyncMessage(null);
+
+    try {
+      let coords = lastCoords;
+
+      if (!coords) {
+        const position = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+
+        coords = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+
+        setLastCoords(coords);
+      }
+
+      socket.emit(SYNC_EVENT_NAME, {
+        userId,
+        lat: coords.lat,
+        lng: coords.lng,
+        syncedAt: new Date(),
+      });
+
+      setSyncState('success');
+      setSyncMessage('Synced successfully');
+    } catch (syncError) {
+      setSyncState('error');
+      setSyncMessage('Sync failed. Please try again.');
+    }
+  };
 
   const humanStatus =
     permissionState === 'denied'
@@ -130,6 +248,13 @@ export default function RoleBTracker({ userId }: RoleBTrackerProps) {
 
       {permissionState === 'checking' || trackerState === 'sending' ? <ActivityIndicator size="small" /> : null}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {pushTokenMessage ? <Text style={styles.meta}>{pushTokenMessage}</Text> : null}
+
+      <Pressable style={[styles.syncButton, syncState === 'syncing' && styles.syncButtonDisabled]} onPress={() => void handleSync()}>
+        <Text style={styles.syncButtonText}>{syncState === 'syncing' ? 'Syncing...' : 'Sync Data'}</Text>
+      </Pressable>
+
+      {syncMessage ? <Text style={styles.syncMessage}>{syncMessage}</Text> : null}
 
       <Pressable style={styles.productsButton} onPress={() => navigation.navigate('Products')}>
         <Text style={styles.productsButtonText}>Go to Products</Text>
@@ -166,6 +291,28 @@ const styles = StyleSheet.create({
     color: '#dc2626',
     fontSize: 14,
     fontWeight: '600',
+  },
+  syncButton: {
+    marginTop: 12,
+    alignSelf: 'flex-start',
+    backgroundColor: '#2563eb',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  syncButtonDisabled: {
+    opacity: 0.7,
+  },
+  syncButtonText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  syncMessage: {
+    marginTop: 6,
+    color: '#065f46',
+    fontSize: 13,
+    fontWeight: '700',
   },
   productsButton: {
     marginTop: 10,

@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { ENDPOINTS } from '../config/network';
 import { setSession } from '../hooks/useAuth';
 import type { AppUser, RootStackParamList } from '../navigation/types';
-
-const LOGIN_URL = 'http://192.168.10.132:4000/api/auth/login';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -32,7 +31,7 @@ export default function LoginScreen({ navigation }: Props) {
     setError(null);
 
     try {
-      const response = await fetch(LOGIN_URL, {
+      const response = await fetch(ENDPOINTS.login, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
