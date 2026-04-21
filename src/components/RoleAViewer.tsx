@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
 import MapView, { Callout, Marker, PROVIDER_GOOGLE, type Region } from 'react-native-maps';
+import { useAuth } from '../hooks/useAuth';
+import { useExpoPushToken } from '../hooks/useExpoPushToken';
 import { useSocket } from '../hooks/useSocket';
+import { ENDPOINTS } from '../config/network';
 
 type LocationUpdatePayload = {
   userId: string;
@@ -22,9 +26,80 @@ const DEFAULT_REGION: Region = {
 
 export default function RoleAViewer() {
   const { socket, status } = useSocket();
+  const { token } = useAuth();
+  const { expoPushToken, permissionStatus } = useExpoPushToken();
   const mapRef = useRef<MapView | null>(null);
   const [locationsByUser, setLocationsByUser] = useState<Record<string, LocationUpdatePayload>>({});
   const [isLocating, setIsLocating] = useState(false);
+  const [pushTokenStatusText, setPushTokenStatusText] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!expoPushToken || !token) {
+      if (permissionStatus === Notifications.PermissionStatus.DENIED) {
+        setPushTokenStatusText('Notifications denied. Push alerts are disabled.');
+      }
+      return;
+    }
+
+    let isMounted = true;
+
+    const savePushToken = async () => {
+      try {
+        const response = await fetch(ENDPOINTS.pushToken, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ token: expoPushToken }),
+        });
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            setPushTokenStatusText('Session expired. Please login again.');
+            return;
+          }
+
+          if (response.status === 400 || response.status === 404 || response.status === 422) {
+            setPushTokenStatusText('Push token rejected by server.');
+            return;
+          }
+
+          setPushTokenStatusText(`Push token save failed (${response.status}).`);
+          return;
+        }
+
+        setPushTokenStatusText('Push token ready.');
+      } catch (pushError) {
+        if (isMounted) {
+          setPushTokenStatusText('Cannot register push token right now.');
+        }
+      }
+    };
+
+    void savePushToken();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [expoPushToken, permissionStatus, token]);
+
+  useEffect(() => {
+    const notificationSubscription = Notifications.addNotificationReceivedListener((notification) => {
+      const title = notification.request.content.title || 'Notification';
+      const body = notification.request.content.body || 'You have a new update.';
+
+      Alert.alert(title, body);
+    });
+
+    return () => {
+      notificationSubscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const handleLocationUpdate = (payload: LocationUpdatePayload) => {
@@ -131,6 +206,7 @@ export default function RoleAViewer() {
       <View style={styles.statusBar}>
         <Text style={styles.statusText}>Socket: {status}</Text>
         <Text style={styles.statusText}>Tracking {markers.length} ROLE_B user(s)</Text>
+        {pushTokenStatusText ? <Text style={styles.statusText}>{pushTokenStatusText}</Text> : null}
       </View>
     </View>
   );

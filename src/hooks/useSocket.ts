@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { io, type Socket } from 'socket.io-client';
+import { SERVER_URL } from '../config/network';
 
-const SOCKET_URL = 'http://192.168.10.132:4000';
 const TOKEN_KEY = 'token';
 
 type SocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
@@ -14,7 +14,7 @@ const getOrCreateSocket = (): Socket => {
     return sharedSocket;
   }
 
-  sharedSocket = io(SOCKET_URL, {
+  sharedSocket = io(SERVER_URL, {
     transports: ['websocket'],
     autoConnect: false,
     reconnection: true,
