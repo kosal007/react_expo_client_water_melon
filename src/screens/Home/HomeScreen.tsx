@@ -10,7 +10,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export default function HomeScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
-  const { t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const user = route.params?.user;
 
   const handleLogout = async () => {
@@ -19,6 +19,10 @@ export default function HomeScreen({ navigation, route }: Props) {
       index: 0,
       routes: [{ name: 'Login' }],
     });
+  };
+
+  const handleToggleLanguage = async () => {
+    await setLanguage(language === 'en' ? 'km' : 'en');
   };
 
   const nativeModuleLoadError = useMemo(() => {
@@ -62,9 +66,14 @@ export default function HomeScreen({ navigation, route }: Props) {
     ) => React.JSX.Element;
     return (
       <View style={styles.roleContainer}>
-        <Pressable style={[styles.logoutButton, { top: insets.top + 10 }]} onPress={() => void handleLogout()}>
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </Pressable>
+        <View style={[styles.topActions, { top: insets.top + 10 }]}>
+          <Pressable style={styles.languageButton} onPress={() => void handleToggleLanguage()}>
+            <Text style={styles.languageButtonText}>{language === 'en' ? 'ខ្មែរ' : 'English'}</Text>
+          </Pressable>
+          <Pressable style={styles.logoutButton} onPress={() => void handleLogout()}>
+            <Text style={styles.logoutButtonText}>Logout</Text>
+          </Pressable>
+        </View>
         <RoleBTracker userId={user.id} />
       </View>
     );
@@ -74,9 +83,14 @@ export default function HomeScreen({ navigation, route }: Props) {
     const RoleAViewer = require('../../components/RoleAViewer').default as () => React.JSX.Element;
     return (
       <View style={styles.roleContainer}>
-        <Pressable style={[styles.logoutButton, { top: insets.top + 10 }]} onPress={() => void handleLogout()}>
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </Pressable>
+        <View style={[styles.topActions, { top: insets.top + 10 }]}>
+          <Pressable style={styles.languageButton} onPress={() => void handleToggleLanguage()}>
+            <Text style={styles.languageButtonText}>{language === 'en' ? 'ខ្មែរ' : 'English'}</Text>
+          </Pressable>
+          <Pressable style={styles.logoutButton} onPress={() => void handleLogout()}>
+            <Text style={styles.logoutButtonText}>Logout</Text>
+          </Pressable>
+        </View>
         <RoleAViewer />
       </View>
     );
@@ -197,10 +211,26 @@ const styles = StyleSheet.create({
   roleContainer: {
     flex: 1,
   },
-  logoutButton: {
+  topActions: {
     position: 'absolute',
     right: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     zIndex: 20,
+  },
+  languageButton: {
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    backgroundColor: 'rgba(37, 99, 235, 0.9)',
+  },
+  languageButtonText: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  logoutButton: {
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 7,

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
-import MapView, { Callout, Marker, PROVIDER_GOOGLE, type Region } from 'react-native-maps';
+import MapView, { Callout, Marker, Polyline, PROVIDER_GOOGLE, type LatLng, type Region } from 'react-native-maps';
 import { useSocket } from '../hooks/useSocket';
 
 type LocationUpdatePayload = {
@@ -14,8 +14,8 @@ type LocationUpdatePayload = {
 const LOCATION_EVENT_NAME = 'location:update';
 
 const DEFAULT_REGION: Region = {
-  latitude: 11.5564,
-  longitude: 104.9282,
+  latitude: 127.5564,
+  longitude: 105.9282,
   latitudeDelta: 0.05,
   longitudeDelta: 0.05,
 };
@@ -24,6 +24,7 @@ export default function RoleAViewer() {
   const { socket, status } = useSocket();
   const mapRef = useRef<MapView | null>(null);
   const [locationsByUser, setLocationsByUser] = useState<Record<string, LocationUpdatePayload>>({});
+  const [pathCoordinates, setPathCoordinates] = useState<LatLng[]>([]);
   const [isLocating, setIsLocating] = useState(false);
 
   useEffect(() => {
@@ -41,6 +42,29 @@ export default function RoleAViewer() {
         ...current,
         [payload.userId]: payload,
       }));
+
+      setPathCoordinates((current) => {
+        const nextPoint: LatLng = {
+          latitude: payload.lat,
+          longitude: payload.lng,
+        };
+
+        const lastPoint = current[current.length - 1];
+        if (
+          lastPoint &&
+          lastPoint.latitude === nextPoint.latitude &&
+          lastPoint.longitude === nextPoint.longitude
+        ) {
+          return current;
+        }
+
+        const nextPath = [...current, nextPoint];
+        if (nextPath.length > 1000) {
+          return nextPath.slice(nextPath.length - 1000);
+        }
+
+        return nextPath;
+      });
     };
 
     socket.on(LOCATION_EVENT_NAME, handleLocationUpdate);
@@ -107,6 +131,14 @@ export default function RoleAViewer() {
         initialRegion={region}
         showsUserLocation
       >
+        {pathCoordinates.length > 1 ? (
+          <Polyline
+            coordinates={pathCoordinates}
+            strokeColor="rgba(97, 99, 235, 0.9)"
+            strokeWidth={4}
+          />
+        ) : null}
+
         {markers.map((item) => (
           <Marker key={item.userId} coordinate={{ latitude: item.lat, longitude: item.lng }}>
             <View style={styles.driverMarkerContainer}>
