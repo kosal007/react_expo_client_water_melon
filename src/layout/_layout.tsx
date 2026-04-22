@@ -4,10 +4,12 @@ import * as Location from 'expo-location';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LanguageProvider } from '../contexts';
 import { useBackgroundSync } from '../hooks/useBackgroundSync';
+import { useExpoPushToken } from '../hooks/useExpoPushToken';
 import RootNavigator from '../navigation/RootNavigator';
 
 export default function RootLayout() {
   useBackgroundSync();
+  useExpoPushToken();
 
   useEffect(() => {
     const requestLocationPermission = async () => {

@@ -38,5 +38,8 @@
   "settings_coming_soon": "Settings options will appear in this screen.",
   "language": "Language",
   "english": "English",
-  "khmer": "Khmer"
+  "khmer": "Khmer",
+  "fcm_device_token": "FCM Device Token",
+  "fcm_no_token_message": "No token yet. Open the app on a physical device and allow notifications.",
+  "reload_token": "Reload token"
 }

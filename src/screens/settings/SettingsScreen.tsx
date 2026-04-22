@@ -1,8 +1,11 @@
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import LanguageOptionButton from '../../components/LanguageOptionButton';
 import { useLanguage } from '../../contexts';
+import { FCM_DEVICE_TOKEN_KEY } from '../../hooks/useExpoPushToken';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
@@ -10,6 +13,21 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 export default function SettingsScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const { language, setLanguage, t } = useLanguage();
+  const [fcmToken, setFcmToken] = useState<string | null>(null);
+
+  const loadFcmToken = useCallback(async () => {
+    try {
+      const token = await AsyncStorage.getItem(FCM_DEVICE_TOKEN_KEY);
+      setFcmToken(token);
+    } catch (error) {
+      console.warn('Failed to read FCM token:', error);
+      setFcmToken(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadFcmToken();
+  }, [loadFcmToken]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
@@ -39,6 +57,16 @@ export default function SettingsScreen({ navigation }: Props) {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{t('coming_soon')}</Text>
         <Text style={styles.cardText}>{t('settings_coming_soon')}</Text>
+      </View>
+
+      <View style={styles.tokenCard}>
+        <Text style={styles.cardTitle}>{t('fcm_device_token')}</Text>
+        <Text style={styles.tokenText}>
+          {fcmToken ?? t('fcm_no_token_message')}
+        </Text>
+        <Pressable style={styles.refreshButton} onPress={() => void loadFcmToken()}>
+          <Text style={styles.refreshButtonText}>{t('reload_token')}</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -114,5 +142,35 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 14,
     color: '#64748b',
+  },
+  tokenCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 16,
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  tokenText: {
+    marginTop: 10,
+    fontSize: 13,
+    color: '#334155',
+    lineHeight: 18,
+  },
+  refreshButton: {
+    marginTop: 12,
+    alignSelf: 'flex-start',
+    borderRadius: 8,
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  refreshButtonText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
