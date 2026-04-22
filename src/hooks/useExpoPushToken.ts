@@ -52,7 +52,11 @@ export const useExpoPushToken = () => {
 
         if (typeof token === 'string' && token.length > 0) {
           await AsyncStorage.setItem(FCM_DEVICE_TOKEN_KEY, token);
-          console.log('FCM device token:', token);
+          if (__DEV__) {
+            const preview =
+              token.length > 16 ? `${token.slice(0, 8)}...${token.slice(-8)}` : `${token.slice(0, 4)}...`;
+            console.log('FCM device token preview:', preview);
+          }
         }
       } catch (error) {
         console.warn('Failed to initialize push notifications:', error);

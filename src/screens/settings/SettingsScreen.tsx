@@ -65,7 +65,7 @@ export default function SettingsScreen({ navigation }: Props) {
           {fcmToken ?? t('fcm_no_token_message')}
         </Text>
         <Pressable style={styles.refreshButton} onPress={() => void loadFcmToken()}>
-          <Text style={styles.refreshButtonText}>{t('refresh_token')}</Text>
+          <Text style={styles.refreshButtonText}>{t('reload_token')}</Text>
         </Pressable>
       </View>
     </View>

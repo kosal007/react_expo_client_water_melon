@@ -41,5 +41,5 @@
   "khmer": "Khmer",
   "fcm_device_token": "FCM Device Token",
   "fcm_no_token_message": "No token yet. Open the app on a physical device and allow notifications.",
-  "refresh_token": "Refresh token"
+  "reload_token": "Reload token"
 }
