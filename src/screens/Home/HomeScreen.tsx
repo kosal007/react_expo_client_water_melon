@@ -5,6 +5,7 @@ import { useLanguage } from '../../contexts';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 import { useMemo } from 'react';
 import { logout } from '../../hooks/useAuth';
+import { useFcmTesting } from '../../hooks';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -12,6 +13,7 @@ export default function HomeScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { language, setLanguage, t } = useLanguage();
   const user = route.params?.user;
+  const { permission, shortToken, fcmToken, lastMessage, refreshToken } = useFcmTesting();
 
   const handleLogout = async () => {
     await logout();
@@ -74,6 +76,15 @@ export default function HomeScreen({ navigation, route }: Props) {
             <Text style={styles.logoutButtonText}>Logout</Text>
           </Pressable>
         </View>
+        <View style={[styles.fcmOverlayCard, { bottom: insets.bottom + 14 }]}> 
+          <Text style={styles.fcmOverlayTitle}>FCM Test</Text>
+          <Text style={styles.fcmOverlayLine}>Permission: {permission}</Text>
+          <Text style={styles.fcmOverlayLine}>Token: {shortToken}</Text>
+          {!!lastMessage && <Text style={styles.fcmOverlayLine}>Last: {lastMessage}</Text>}
+          <Pressable style={styles.fcmButton} onPress={() => void refreshToken()}>
+            <Text style={styles.fcmButtonText}>Refresh token</Text>
+          </Pressable>
+        </View>
         <RoleBTracker userId={user.id} />
       </View>
     );
@@ -89,6 +100,15 @@ export default function HomeScreen({ navigation, route }: Props) {
           </Pressable>
           <Pressable style={styles.logoutButton} onPress={() => void handleLogout()}>
             <Text style={styles.logoutButtonText}>Logout</Text>
+          </Pressable>
+        </View>
+        <View style={[styles.fcmOverlayCard, { bottom: insets.bottom + 14 }]}> 
+          <Text style={styles.fcmOverlayTitle}>FCM Test</Text>
+          <Text style={styles.fcmOverlayLine}>Permission: {permission}</Text>
+          <Text style={styles.fcmOverlayLine}>Token: {shortToken}</Text>
+          {!!lastMessage && <Text style={styles.fcmOverlayLine}>Last: {lastMessage}</Text>}
+          <Pressable style={styles.fcmButton} onPress={() => void refreshToken()}>
+            <Text style={styles.fcmButtonText}>Refresh token</Text>
           </Pressable>
         </View>
         <RoleAViewer />
@@ -118,6 +138,19 @@ export default function HomeScreen({ navigation, route }: Props) {
           accessibilityLabel={t('open_products')}
         >
           <Text style={styles.buttonIcon}>📦</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.fcmCard}>
+        <Text style={styles.fcmTitle}>FCM Android Test</Text>
+        <Text style={styles.fcmLine}>Permission: {permission}</Text>
+        <Text style={styles.fcmLine}>Token:</Text>
+        <Text selectable style={styles.fcmTokenValue}>
+          {fcmToken || 'Not available yet'}
+        </Text>
+        {!!lastMessage && <Text style={styles.fcmLine}>Last message: {lastMessage}</Text>}
+        <Pressable style={styles.fcmButton} onPress={() => void refreshToken()}>
+          <Text style={styles.fcmButtonText}>Refresh token</Text>
         </Pressable>
       </View>
     </View>
@@ -210,6 +243,63 @@ const styles = StyleSheet.create({
   },
   roleContainer: {
     flex: 1,
+  },
+  fcmCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    marginTop: 12,
+    marginBottom: 12,
+  },
+  fcmOverlayCard: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    borderRadius: 12,
+    padding: 10,
+    zIndex: 20,
+  },
+  fcmTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: 4,
+  },
+  fcmLine: {
+    fontSize: 12,
+    color: '#475569',
+    marginTop: 2,
+  },
+  fcmTokenValue: {
+    fontSize: 11,
+    color: '#0f172a',
+    marginTop: 4,
+  },
+  fcmButton: {
+    marginTop: 8,
+    borderRadius: 8,
+    backgroundColor: '#2563eb',
+    paddingVertical: 7,
+    alignItems: 'center',
+  },
+  fcmButtonText: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  fcmOverlayTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#e2e8f0',
+    marginBottom: 4,
+  },
+  fcmOverlayLine: {
+    fontSize: 12,
+    color: '#e2e8f0',
+    marginTop: 2,
   },
   topActions: {
     position: 'absolute',
