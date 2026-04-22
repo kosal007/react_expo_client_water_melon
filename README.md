@@ -167,7 +167,49 @@ If permission dialogs do not appear:
 
 ---
 
-## 7) Project structure (high level)
+## 7) FCM push notification testing (physical device, no backend)
+
+This repo now includes a minimal FCM test setup for Expo dev client:
+
+- `expo-notifications` + `expo-device`
+- token registration hook: `src/hooks/useExpoPushToken.ts`
+- token persistence key: `fcmDeviceToken` (AsyncStorage)
+- token display screen: `Settings` (FCM Device Token card)
+
+### Firebase setup (Android)
+
+1. In Firebase Console, create/select your project.
+2. Add Android app package:
+   - `com.kosalseng.crmapp3`
+3. Download `google-services.json`.
+4. Place file at project root:
+   - `/home/runner/work/react_expo_client_water_melon/react_expo_client_water_melon/google-services.json`
+
+### Build and run
+
+> Use dev client build, not Expo Go.
+
+```bash
+npx expo run:android
+```
+
+### Generate token and send test notification
+
+1. Open app on physical Android device.
+2. Accept notifications permission prompt.
+3. Open Settings screen and copy the `FCM Device Token`.
+4. In Firebase Console:
+   - Cloud Messaging → Send notification
+   - Use single device token target
+   - Paste the token
+   - Send test message
+5. Verify delivery:
+   - foreground: check in-app/log output
+   - background: system tray notification
+
+---
+
+## 8) Project structure (high level)
 
 - `src/screens` — Login, Home, Product, Settings
 - `src/components` — role views (`RoleAViewer`, `RoleBTracker`) and shared UI
@@ -177,7 +219,7 @@ If permission dialogs do not appear:
 
 ---
 
-## 8) Latest updates
+## 9) Latest updates
 
 ### Latest implemented updates (April 2026)
 
@@ -210,7 +252,7 @@ If permission dialogs do not appear:
 
 ---
 
-## 9) Notes
+## 10) Notes
 
 - Keep secrets out of source for production (move API keys and endpoints to env-based config).
 - For release builds, validate Google key restrictions carefully to avoid blank maps.
