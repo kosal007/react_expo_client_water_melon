@@ -1,4 +1,4 @@
-const DEFAULT_SERVER_URL = 'http://192.168.10.228:4000';
+const DEFAULT_SERVER_URL = 'http://192.168.10.227:4000';
 
 const trimTrailingSlash = (value: string): string => value.replace(/\/+$/, '');
 
