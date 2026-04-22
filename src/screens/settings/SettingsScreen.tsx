@@ -60,12 +60,12 @@ export default function SettingsScreen({ navigation }: Props) {
       </View>
 
       <View style={styles.tokenCard}>
-        <Text style={styles.cardTitle}>FCM Device Token</Text>
+        <Text style={styles.cardTitle}>{t('fcm_device_token')}</Text>
         <Text style={styles.tokenText}>
-          {fcmToken ?? 'No token yet. Open the app on a physical device and allow notifications.'}
+          {fcmToken ?? t('fcm_no_token_message')}
         </Text>
         <Pressable style={styles.refreshButton} onPress={() => void loadFcmToken()}>
-          <Text style={styles.refreshButtonText}>Refresh token</Text>
+          <Text style={styles.refreshButtonText}>{t('refresh_token')}</Text>
         </Pressable>
       </View>
     </View>

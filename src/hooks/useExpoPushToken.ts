@@ -17,8 +17,6 @@ Notifications.setNotificationHandler({
 
 export const useExpoPushToken = () => {
   useEffect(() => {
-    let isMounted = true;
-
     const registerForPushNotificationsAsync = async () => {
       try {
         if (Platform.OS === 'android') {
@@ -54,9 +52,7 @@ export const useExpoPushToken = () => {
 
         if (typeof token === 'string' && token.length > 0) {
           await AsyncStorage.setItem(FCM_DEVICE_TOKEN_KEY, token);
-          if (isMounted) {
-            console.log('FCM device token:', token);
-          }
+          console.log('FCM device token:', token);
         }
       } catch (error) {
         console.warn('Failed to initialize push notifications:', error);
@@ -74,7 +70,6 @@ export const useExpoPushToken = () => {
     void registerForPushNotificationsAsync();
 
     return () => {
-      isMounted = false;
       receivedSub.remove();
       responseSub.remove();
     };

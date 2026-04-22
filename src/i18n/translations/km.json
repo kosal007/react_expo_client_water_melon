@@ -38,5 +38,8 @@
   "settings_coming_soon": "ជម្រើសការកំណត់នឹងបង្ហាញនៅលើអេក្រង់នេះ។",
   "language": "ភាសា",
   "english": "អង់គ្លេស",
-  "khmer": "ខ្មែរ"
+  "khmer": "ខ្មែរ",
+  "fcm_device_token": "FCM Device Token",
+  "fcm_no_token_message": "មិនទាន់មាន Token នៅឡើយ។ សូមបើកកម្មវិធីលើទូរស័ព្ទពិត ហើយអនុញ្ញាតការជូនដំណឹង។",
+  "refresh_token": "ផ្ទុក token ម្តងទៀត"
 }

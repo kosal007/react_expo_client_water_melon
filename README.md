@@ -183,7 +183,7 @@ This repo now includes a minimal FCM test setup for Expo dev client:
    - `com.kosalseng.crmapp3`
 3. Download `google-services.json`.
 4. Place file at project root:
-   - `/home/runner/work/react_expo_client_water_melon/react_expo_client_water_melon/google-services.json`
+   - `./google-services.json`
 
 ### Build and run
 
