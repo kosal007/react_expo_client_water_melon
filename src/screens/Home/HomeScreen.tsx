@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useLanguage } from '../../contexts';
+import { useGeofenceAttendanceContext, useLanguage } from '../../contexts';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 import { useMemo } from 'react';
 import { logout } from '../../hooks/useAuth';
@@ -14,6 +14,10 @@ export default function HomeScreen({ navigation, route }: Props) {
   const { language, setLanguage, t } = useLanguage();
   const user = route.params?.user;
   const { permission, shortToken, fcmToken, lastMessage, refreshToken } = useFcmTesting();
+  const { presence, isTracking, error: geofenceError } = useGeofenceAttendanceContext();
+
+  const geofenceStatusLabel =
+    presence === 'inside' ? 'Inside' : presence === 'outside' ? 'Outside' : isTracking ? 'Detecting...' : 'Unknown';
 
   const handleLogout = async () => {
     await logout();
@@ -85,6 +89,11 @@ export default function HomeScreen({ navigation, route }: Props) {
             <Text style={styles.fcmButtonText}>Refresh token</Text>
           </Pressable>
         </View>
+        <View style={[styles.geofenceOverlayCard, { top: insets.top + 56 }]}> 
+          <Text style={styles.geofenceOverlayTitle}>Geofence</Text>
+          <Text style={styles.geofenceOverlayLine}>Status: {geofenceStatusLabel}</Text>
+          {!!geofenceError && <Text style={styles.geofenceOverlayLine}>Error: {geofenceError}</Text>}
+        </View>
         <RoleBTracker userId={user.id} />
       </View>
     );
@@ -110,6 +119,11 @@ export default function HomeScreen({ navigation, route }: Props) {
           <Pressable style={styles.fcmButton} onPress={() => void refreshToken()}>
             <Text style={styles.fcmButtonText}>Refresh token</Text>
           </Pressable>
+        </View>
+        <View style={[styles.geofenceOverlayCard, { top: insets.top + 56 }]}> 
+          <Text style={styles.geofenceOverlayTitle}>Geofence</Text>
+          <Text style={styles.geofenceOverlayLine}>Status: {geofenceStatusLabel}</Text>
+          {!!geofenceError && <Text style={styles.geofenceOverlayLine}>Error: {geofenceError}</Text>}
         </View>
         <RoleAViewer />
       </View>
@@ -152,6 +166,12 @@ export default function HomeScreen({ navigation, route }: Props) {
         <Pressable style={styles.fcmButton} onPress={() => void refreshToken()}>
           <Text style={styles.fcmButtonText}>Refresh token</Text>
         </Pressable>
+      </View>
+
+      <View style={styles.geofenceCard}>
+        <Text style={styles.geofenceTitle}>Geofence Debug</Text>
+        <Text style={styles.geofenceLine}>Status: {geofenceStatusLabel}</Text>
+        {!!geofenceError && <Text style={styles.geofenceLine}>Error: {geofenceError}</Text>}
       </View>
     </View>
   );
@@ -251,6 +271,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#cbd5e1',
     marginTop: 12,
+    marginBottom: 10,
+  },
+  geofenceCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
     marginBottom: 12,
   },
   fcmOverlayCard: {
@@ -299,6 +327,36 @@ const styles = StyleSheet.create({
   fcmOverlayLine: {
     fontSize: 12,
     color: '#e2e8f0',
+    marginTop: 2,
+  },
+  geofenceOverlayCard: {
+    position: 'absolute',
+    left: 12,
+    right: 140,
+    backgroundColor: 'rgba(30, 41, 59, 0.82)',
+    borderRadius: 12,
+    padding: 10,
+    zIndex: 20,
+  },
+  geofenceOverlayTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#e2e8f0',
+  },
+  geofenceOverlayLine: {
+    fontSize: 12,
+    color: '#e2e8f0',
+    marginTop: 2,
+  },
+  geofenceTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: 4,
+  },
+  geofenceLine: {
+    fontSize: 12,
+    color: '#475569',
     marginTop: 2,
   },
   topActions: {

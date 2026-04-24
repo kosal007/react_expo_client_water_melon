@@ -1,9 +1,12 @@
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
+import { getApps } from '@react-native-firebase/app';
 import notifee, { AndroidImportance } from '@notifee/react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PermissionsAndroid, Platform } from 'react-native';
 
 type PermissionState = 'unknown' | 'granted' | 'denied';
+
+const isFirebaseConfigured = (): boolean => getApps().length > 0;
 
 const normalizeMessage = (message?: FirebaseMessagingTypes.RemoteMessage | null) => {
   if (!message) {
@@ -66,6 +69,12 @@ export function useFcmTesting() {
   const [lastMessage, setLastMessage] = useState<string>('');
 
   const refreshToken = useCallback(async () => {
+    if (!isFirebaseConfigured()) {
+      console.warn('[FCM] Firebase default app is not configured. Add GoogleService-Info.plist (iOS) and google-services.json (Android).');
+      setFcmToken('');
+      return '';
+    }
+
     try {
       const token = await messaging().getToken();
       setFcmToken(token);
@@ -80,6 +89,15 @@ export function useFcmTesting() {
 
   useEffect(() => {
     let isMounted = true;
+
+    if (!isFirebaseConfigured()) {
+      console.warn('[FCM] Firebase default app is not configured. FCM listeners are disabled for this build.');
+      setPermission('denied');
+      setLastMessage('Firebase app is not configured on this device build');
+      return () => {
+        isMounted = false;
+      };
+    }
 
     const initialize = async () => {
       try {
