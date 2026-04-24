@@ -2,12 +2,19 @@ import { NavigationContainer } from '@react-navigation/native';
 import { useEffect } from 'react';
 import * as Location from 'expo-location';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { LanguageProvider } from '../contexts';
+import { GeofenceAttendanceProvider, LanguageProvider } from '../contexts';
 import { useBackgroundSync } from '../hooks/useBackgroundSync';
+import { useAuth } from '../hooks/useAuth';
+import { useGeofenceAttendance } from '../hooks/useGeofenceAttendance';
 import RootNavigator from '../navigation/RootNavigator';
 
 export default function RootLayout() {
   useBackgroundSync();
+  const { token, user } = useAuth();
+  const geofenceAttendance = useGeofenceAttendance({
+    token,
+    enabled: Boolean(user),
+  });
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -26,11 +33,13 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <LanguageProvider>
-        <NavigationContainer>
-          <RootNavigator />
-        </NavigationContainer>
-      </LanguageProvider>
+      <GeofenceAttendanceProvider value={geofenceAttendance}>
+        <LanguageProvider>
+          <NavigationContainer>
+            <RootNavigator />
+          </NavigationContainer>
+        </LanguageProvider>
+      </GeofenceAttendanceProvider>
     </SafeAreaProvider>
   );
 }
